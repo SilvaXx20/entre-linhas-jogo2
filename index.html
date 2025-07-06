@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entre Linhas do Silêncio</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #0d0d0d;
+      color: #e6e6e6;
+      font-family: 'Courier New', monospace;
+      display: flex; flex-direction: column; align-items: center;
+      min-height: 100vh; padding: 40px 20px;
+    }
+    .title { font-size: 32px; color: crimson; margin-bottom: 30px; text-align: center; }
+    .imagem img {
+      width: 100%; max-width: 400px;
+      border: 2px solid crimson; border-radius: 12px; margin-bottom: 30px;
+    }
+    button {
+      background-color: #1a1a1a; border: 1px solid crimson; color: #e6e6e6;
+      font-size: 16px; padding: 12px 24px; margin: 10px;
+      cursor: pointer; border-radius: 6px; transition: all 0.3s ease;
+    }
+    button:hover { background-color: crimson; color: #0d0d0d; }
+    .dialogo {
+      font-size: 18px; line-height: 1.4; white-space: pre-wrap;
+      max-width: 800px; margin: 30px auto; text-align: left; min-height: 160px;
+    }
+    .falas { color: crimson; }
+    .acoes { color: white; }
+    .menu, .paciente, .dialogo, .escolhas {
+      display: none; text-align: center;
+    }
+    .escolhas { margin-top: 20px; flex-wrap: wrap; }
+    @media (max-width: 480px) {
+      button { width: 100%; font-size: 15px; }
+      .dialogo { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="title">Entre Linhas do Silêncio</div>
+
+  <div class="menu" id="menu">
+    <div class="imagem">
+      <img src="https://drive.google.com/uc?export=view&id=1DTdGIhHijVhyt-6Em921Y6KS15jeNaDR" alt="Capa do Jogo">
+    </div>
+    <button onclick="mostrarPaciente()">Iniciar Terapia</button>
+  </div>
+
+  <div class="paciente" id="paciente">
+    <p style="margin-bottom: 20px;">Paciente 001: Ana</p>
+    <button onclick="iniciarDialogo()">Iniciar Sessão</button>
+  </div>
+
+  <div class="dialogo" id="dialogo"></div>
+
+  <div class="escolhas" id="escolhas">
+    <button onclick="resposta(1)">Você se sente um fardo pra ela?</button>
+    <button onclick="resposta(2)">Por que você tá se cortando?</button>
+    <button onclick="resposta(3)">Você já tentou conversar com ela de verdade?</button>
+  </div>
+
+  <audio id="tecla" src="tecla.mp3" preload="auto"></audio>
+
+  <script>
+    const menu = document.getElementById('menu');
+    const paciente = document.getElementById('paciente');
+    const dialogo = document.getElementById('dialogo');
+    const escolhas = document.getElementById('escolhas');
+    const tecla = document.getElementById("tecla");
+
+    menu.style.display = 'block';
+
+    function mostrarPaciente() {
+      menu.style.display = 'none';
+      paciente.style.display = 'block';
+    }
+
+    function iniciarDialogo() {
+      paciente.style.display = 'none';
+      dialogo.style.display = 'block';
+      digitarTexto([
+        { texto: "Ana entra na sala em silêncio.", tipo: "acao" },
+        { texto: "Ela se senta… olha pro chão… e diz:", tipo: "acao" },
+        { texto: '"Minha mãe disse que, se eu me esforçasse mais, eu não seria esse erro ambulante..."', tipo: "fala" }
+      ], () => { escolhas.style.display = 'block'; });
+    }
+
+    function resposta(opcao) {
+      escolhas.style.display = 'none';
+      let blocos = [];
+
+      if (opcao === 1) {
+        blocos = [
+          { texto: "Você: Você se sente um fardo pra ela?", tipo: "fala" },
+          { texto: "Ana começa a chorar.", tipo: "acao" },
+          { texto: "Ana: “Sim… todos os dias. Até quando respiro.”", tipo: "fala" }
+        ];
+      } else if (opcao === 2) {
+        blocos = [
+          { texto: "Você: Por que você tá se cortando?", tipo: "fala" },
+          { texto: "Ana olha com raiva.", tipo: "acao" },
+          { texto: "Ana: “Você é mais um desses que acha que eu faço isso pra chamar atenção, né?”", tipo: "fala" }
+        ];
+      } else if (opcao === 3) {
+        blocos = [
+          { texto: "Você: Você já tentou conversar com ela de verdade?", tipo: "fala" },
+          { texto: "Ana suspira, irônica.", tipo: "acao" },
+          { texto: "Ana: “Sim, tentei. Ela me mandou lavar a louça e parar com drama.”", tipo: "fala" }
+        ];
+      }
+
+      digitarTexto(blocos);
+    }
+
+    function digitarTexto(blocos, callback) {
+      dialogo.innerHTML = "";
+      let blocoIndex = 0;
+
+      function escreverBloco() {
+        if (blocoIndex >= blocos.length) {
+          if (callback) callback();
+          return;
+        }
+
+        const bloco = blocos[blocoIndex];
+        const span = document.createElement("div");
+        span.className = bloco.tipo === "fala" ? "falas" : "acoes";
+        dialogo.appendChild(span);
+
+        let i = 0;
+        const intervalo = setInterval(() => {
+          if (i < bloco.texto.length) {
+            const char = bloco.texto.charAt(i);
+            span.innerText += char;
+
+            if (bloco.tipo === "fala" && /[^\s]/.test(char)) {
+              tecla.currentTime = 0;
+              tecla.play();
+            }
+
+            i++;
+          } else {
+            clearInterval(intervalo);
+            blocoIndex++;
+            setTimeout(escreverBloco, 600);
+          }
+        }, 55);
+      }
+
+      escreverBloco();
+    }
+  </script>
+</body>
+</html>
